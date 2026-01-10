@@ -40,7 +40,7 @@ export default function Home() {
         <div className="bg-[#050505] text-white overflow-x-hidden selection:bg-[#00E599] selection:text-black font-sans">
 
             {/* --- HERO SECTION --- */}
-            <section className="relative min-h-screen flex items-center justify-center pt-24 sm:pt-32 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+            <section className="relative min-h-screen flex items-center justify-center pt-24 sm:pt-32 pb-20 overflow-hidden">
                 {/* Background Graphics */}
                 <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
                     <div className="absolute top-[-10%] right-[-10%] w-[800px] h-[800px] bg-[#00E599] rounded-full blur-[200px] opacity-10 animate-pulse"></div>
@@ -49,7 +49,7 @@ export default function Home() {
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] border border-dashed border-white/10 rounded-full animate-spin-slow"></div>
                 </div>
 
-                <div className="relative z-10 max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center w-full">
+                <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 grid lg:grid-cols-2 gap-12 items-center w-full">
                     {/* Left: Content */}
                     <div className="text-center lg:text-left">
                         <motion.div
@@ -62,9 +62,9 @@ export default function Home() {
                                 <span className="text-xs font-bold uppercase tracking-widest text-[#00E599]">Live Events</span>
                             </div>
 
-                            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-black mb-6 sm:mb-8 leading-[0.9] tracking-tighter">
+                            <h1 className="text-4xl sm:text-6xl md:text-4xl lg:text-8xl xl:text-9xl font-black mb-6 sm:mb-8 leading-[0.9] tracking-tighter">
                                 UNLEASH <br />
-                                <span className="text-transparent bg-clip-text bg-gradient-to-br from-[#00E599] via-green-400 to-emerald-600">THE HYPE.</span>
+                                <span className="text-transparent bg-clip-text bg-gradient-to-br from-[#00E599] via-green-400 to-emerald-600">HYPE.</span>
                             </h1>
 
                             <p className="text-gray-400 text-lg md:text-xl font-medium max-w-xl mx-auto lg:mx-0 mb-10 leading-relaxed">
