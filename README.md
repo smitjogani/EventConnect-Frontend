@@ -154,9 +154,6 @@ Client/
 ### Icons
 - **Lucide React**: Beautiful, consistent icon set
 
-### QR Code
-- **react-qr-code**: QR code generation for tickets
-
 ---
 
 ## 🎯 Key Features
