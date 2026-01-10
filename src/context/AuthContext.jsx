@@ -20,18 +20,12 @@ export function AuthProvider({ children }) {
 
     const login = async (email, password) => {
         const response = await api.post('/auth/authenticate', { email, password });
-        const { accessToken, refreshToken, user: userData } = response.data; // Assuming backend returns user info now?
-        // Wait, backend AuthResponse only returns tokens. 
-        // We might need to decode the token or fetch /my-bookings to verify.
-        // For this demo, let's trust the token works and maybe simulate user data or decode JWT.
+        const { accessToken, refreshToken, role } = response.data;
 
         localStorage.setItem('token', accessToken);
-        // localStorage.setItem('refreshToken', refreshToken); // Bonus
+        if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
 
-        // Since backend register/login implementation might not return full User object in some versions,
-        // Using email as identifier for now if userData missing.
-        const userObj = { email };
-
+        const userObj = { email, role };
         localStorage.setItem('user', JSON.stringify(userObj));
         setUser(userObj);
         return true;
@@ -39,10 +33,12 @@ export function AuthProvider({ children }) {
 
     const register = async (name, email, password) => {
         const response = await api.post('/auth/register', { name, email, password });
-        const { accessToken } = response.data;
+        const { accessToken, refreshToken, role } = response.data;
 
         localStorage.setItem('token', accessToken);
-        const userObj = { name, email };
+        if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+
+        const userObj = { name, email, role };
         localStorage.setItem('user', JSON.stringify(userObj));
         setUser(userObj);
         return true;

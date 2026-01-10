@@ -1,88 +1,122 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate, Link } from 'react-router-dom';
+import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
-import Input from '../components/ui/Input';
-import Button from '../components/ui/Button';
 
-const Login = () => {
-    const { register, handleSubmit, formState: { errors } } = useForm();
+const schema = yup.object({
+    email: yup.string().email('Invalid email').required('Email is required'),
+    password: yup.string().required('Password is required'),
+}).required();
 
-    const onSubmit = (data) => {
-        console.log(data);
+export default function Login() {
+    const { login } = useAuth();
+    const navigate = useNavigate();
+    const [error, setError] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+
+    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
+        resolver: yupResolver(schema)
+    });
+
+    const onSubmit = async (data) => {
+        try {
+            setError('');
+            await login(data.email, data.password);
+
+            // Re-read user from storage or logic? auth state updates async?
+            // Actually, for immediate redirect, let's just check the userRole returned or rely on state.
+            // Since login updates state async, we might not have user immediately in context.
+            // But we can check localStorage as we just set it.
+            const savedUser = JSON.parse(localStorage.getItem('user'));
+            if (savedUser?.role === 'ADMIN') {
+                navigate('/admin');
+            } else {
+                navigate('/');
+            }
+        } catch (err) {
+            setError('Invalid email or password');
+        }
     };
 
     return (
-        <div className="min-h-screen flex">
-            {/* Left: Image Side */}
-            <div className="hidden lg:block w-1/2 relative bg-black">
-                <img
-                    src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1200&q=80"
-                    alt="Login Cover"
-                    className="w-full h-full object-cover opacity-60"
-                />
-                <div className="absolute inset-0 flex items-center justify-center">
-                    <h1 className="text-8xl font-black text-transparent text-stroke stroke-white opacity-20 uppercase tracking-tighter">
-                        Access
-                    </h1>
-                </div>
-                <div className="absolute bottom-10 left-10 text-white">
-                    <p className="font-bold uppercase tracking-widest text-sm mb-1">Event Connect</p>
-                    <p className="text-gray-400 text-xs">© 2026 All Rights Reserved.</p>
-                </div>
-            </div>
+        <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4 relative overflow-hidden">
+            {/* Background Effects */}
+            <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-[#00E599] rounded-full blur-[200px] opacity-10 pointer-events-none"></div>
+            <div className="absolute bottom-[-20%] left-[-10%] w-[500px] h-[500px] bg-purple-900 rounded-full blur-[150px] opacity-10 pointer-events-none"></div>
 
-            {/* Right: Form Side */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center p-12 bg-white">
-                <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="w-full max-w-md"
-                >
-                    <div className="mb-12">
-                        <h2 className="text-4xl font-black text-black mb-2 uppercase">Welcome Back</h2>
-                        <p className="text-gray-500">Please enter your details to sign in.</p>
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5 }}
+                className="w-full max-w-md bg-[#111] border border-white/10 p-8 rounded-2xl relative z-10 shadow-2xl"
+            >
+                <div className="text-center mb-10">
+                    <h1 className="text-4xl font-black text-white mb-2 uppercase tracking-tight">Welcome Back</h1>
+                    <p className="text-gray-400">Sign in to access your tickets</p>
+                </div>
+
+                {error && (
+                    <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-3 rounded-lg mb-6 text-sm font-bold text-center">
+                        {error}
+                    </div>
+                )}
+
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase tracking-widest text-[#00E599]">Email Address</label>
+                        <div className="relative">
+                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
+                            <input
+                                {...register('email')}
+                                className="w-full bg-[#050505] border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-[#00E599] transition-colors"
+                                placeholder="name@example.com"
+                            />
+                        </div>
+                        <p className="text-red-500 text-xs">{errors.email?.message}</p>
                     </div>
 
-                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-                        <Input
-                            label="Email"
-                            type="email"
-                            placeholder="john@example.com"
-                            {...register('email', { required: 'Email is required' })}
-                            error={errors.email}
-                        />
-                        <Input
-                            label="Password"
-                            type="password"
-                            placeholder="••••••••"
-                            {...register('password', { required: 'Password is required' })}
-                            error={errors.password}
-                        />
-
-                        <div className="flex items-center justify-between text-sm">
-                            <label className="flex items-center text-gray-500 cursor-pointer hover:text-black transition-colors">
-                                <input type="checkbox" className="mr-2 rounded-none border-gray-300 text-black focus:ring-black" />
-                                Remember for 30 days
-                            </label>
-                            <a href="#" className="text-black font-bold uppercase text-xs tracking-wider border-b border-transparent hover:border-black transition-all">Forgot Password?</a>
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase tracking-widest text-[#00E599]">Password</label>
+                        <div className="relative">
+                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                {...register('password')}
+                                className="w-full bg-[#050505] border border-white/10 rounded-xl py-3 pl-12 pr-12 text-white focus:outline-none focus:border-[#00E599] transition-colors"
+                                placeholder="••••••••"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+                            >
+                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                            </button>
                         </div>
+                        <p className="text-red-500 text-xs">{errors.password?.message}</p>
+                    </div>
 
-                        <Button type="submit" variant="primary" size="lg" className="w-full uppercase tracking-widest">
-                            Log In
-                        </Button>
-                    </form>
+                    <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="w-full bg-[#00E599] text-black font-black uppercase tracking-widest py-4 rounded-xl hover:bg-white transition-colors flex items-center justify-center gap-2 group"
+                    >
+                        {isSubmitting ? (
+                            <span className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></span>
+                        ) : (
+                            'Sign In'
+                        )}
+                    </button>
+                </form>
 
-                    <p className="mt-8 text-center text-gray-400 text-sm">
-                        Don't have an account?{' '}
-                        <Link to="/register" className="text-black font-bold uppercase tracking-wider hover:underline ml-1">
-                            Sign Up
-                        </Link>
-                    </p>
-                </motion.div>
-            </div>
+                <div className="mt-8 text-center text-sm text-gray-400">
+                    Don't have an account? <Link to="/register" className="text-white font-bold hover:text-[#00E599] transition-colors">Sign up</Link>
+                </div>
+            </motion.div>
         </div>
     );
-};
-
-export default Login;
+}

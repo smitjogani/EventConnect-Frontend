@@ -9,10 +9,9 @@ export default function Footer() {
                     {/* Brand */}
                     <div className="space-y-6">
                         <div className="flex items-center gap-2">
-                            <div className="bg-white text-black p-1.5 rounded-lg">
-                                <Ticket size={24} />
-                            </div>
-                            <span className="font-bold text-xl tracking-tight">Event Connect</span>
+                            <span className="font-black text-2xl tracking-tighter text-white">
+                                EVENT<span className="text-[#00E599]">CONNECT</span>
+                            </span>
                         </div>
                         <p className="text-gray-400 text-sm leading-relaxed">
                             The premier platform for discovering and booking the world's most exciting events. seamless, secure, and smart.
@@ -47,11 +46,8 @@ export default function Footer() {
                     ))}
                 </div>
 
-                <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-center items-center gap-4">
                     <p className="text-gray-500 text-sm">© 2026 Event Connect Inc. All rights reserved.</p>
-                    <div className="flex gap-8">
-                        <span className="text-gray-500 text-sm">Made with ❤️ for Events</span>
-                    </div>
                 </div>
             </div>
         </footer>

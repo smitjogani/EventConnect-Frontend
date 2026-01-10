@@ -1,15 +1,52 @@
 @import "tailwindcss";
 
+/* 1. Define Fonts (Plus Jakarta Sans) */
+@font-face {
+    font-family: 'Plus Jakarta Sans';
+    src: url('./fonts/cIflMapbsEk7TDLdtEz1BwkeJI91R5_F.woff2') format('woff2');
+    /* Regular 400 */
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Plus Jakarta Sans';
+    src: url('./fonts/cIflMapbsEk7TDLdtEz1BwkeNIh1R5_F.woff2') format('woff2');
+    /* Medium 500 */
+    font-weight: 500;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Plus Jakarta Sans';
+    src: url('./fonts/cIflMapbsEk7TDLdtEz1BwkeQI51R5_F.woff2') format('woff2');
+    /* Bold 700 */
+    font-weight: 700;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Plus Jakarta Sans';
+    src: url('./fonts/cIflMapbsEk7TDLdtEz1BwkebIl1R5_F.woff2') format('woff2');
+    /* ExtraBold 800 */
+    font-weight: 800;
+    font-style: normal;
+}
+
 @theme {
-    --color-primary: #111111;
-    /* Almost Black */
-    --color-secondary: #f4f4f4;
-    /* Light Gray */
-    --color-accent: #333333;
-    --color-bg-light: #ffffff;
+    --color-primary: #00E599;
+    /* Vibrant Green */
+    --color-primary-dark: #00B570;
+    --color-dark: #050505;
+    /* Deep Black */
+    --color-dark-card: #111111;
+    --color-light: #ffffff;
+    --color-gray: #888888;
 
-    --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+    --font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
+    --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
 
+    /* Animations */
     --animate-fade-in-up: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     --animate-scale-in: scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 
@@ -39,15 +76,16 @@
 }
 
 :root {
-    font-family: var(--font-sans);
-    background-color: var(--color-bg-light);
-    color: #111111;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     -webkit-font-smoothing: antialiased;
+    color: #fff;
+    background: #050505;
+    --ticket-notch-size: 16px;
 }
 
 body {
     margin: 0;
-    min-height: 100vh;
+    background-color: var(--color-dark);
 }
 
 /* Custom Scrollbar */
@@ -56,18 +94,86 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-    background: transparent;
+    background: #000;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #ddd;
+    background: #333;
     border-radius: 10px;
 }
 
-/* Utility for the dashed lines in 'How it works' */
-.dashed-connector {
-    background-image: linear-gradient(to right, #ccc 50%, rgba(255, 255, 255, 0) 0%);
+/* --- TICKET SHAPE UTILITIES --- */
+
+/* 1. The Classic Ticket (Green/White style) */
+.ticket-shape {
+    position: relative;
+    background: radial-gradient(circle at 0 50%, transparent var(--ticket-notch-size), #00E599 calc(var(--ticket-notch-size) + 1px)) top left / 51% 100% no-repeat,
+        radial-gradient(circle at 100% 50%, transparent var(--ticket-notch-size), #00E599 calc(var(--ticket-notch-size) + 1px)) top right / 51% 100% no-repeat;
+}
+
+.ticket-shape-white {
+    position: relative;
+    background: radial-gradient(circle at 0 50%, transparent var(--ticket-notch-size), #ffffff calc(var(--ticket-notch-size) + 1px)) top left / 51% 100% no-repeat,
+        radial-gradient(circle at 100% 50%, transparent var(--ticket-notch-size), #ffffff calc(var(--ticket-notch-size) + 1px)) top right / 51% 100% no-repeat;
+}
+
+/* 2. Mask variant (Better for borders/images) */
+.ticket-mask-horizontal {
+    --notch: 20px;
+    mask-image:
+        radial-gradient(circle at left center, transparent var(--notch), black calc(var(--notch) + 0.5px)),
+        radial-gradient(circle at right center, transparent var(--notch), black calc(var(--notch) + 0.5px));
+    mask-position: left, right;
+    mask-size: 51% 100%;
+    mask-repeat: no-repeat;
+}
+
+.ticket-mask-vertical {
+    --notch: 20px;
+    mask-image:
+        radial-gradient(circle at center top, transparent var(--notch), black calc(var(--notch) + 0.5px)),
+        radial-gradient(circle at center bottom, transparent var(--notch), black calc(var(--notch) + 0.5px));
+    mask-position: top, bottom;
+    mask-size: 100% 51%;
+    mask-repeat: no-repeat;
+}
+
+.dashed-divider {
+    background-image: linear-gradient(to right, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0) 0%);
     background-position: bottom;
-    background-size: 10px 1px;
+    background-size: 12px 1px;
     background-repeat: repeat-x;
+    height: 1px;
+    width: 100%;
+}
+
+/* MARQUEE & ANIMATION */
+@keyframes marquee {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+.animate-marquee {
+    display: flex;
+    white-space: nowrap;
+    animation: marquee 20s linear infinite;
+}
+
+.animate-spin-slow {
+    animation: spin 10s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
