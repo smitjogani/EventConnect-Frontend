@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { motion } from 'framer-motion';
 import api from '../services/api';
-import Button from '../components/ui/Button';
-import Input from '../components/ui/Input';
 import { useAuth } from '../context/AuthContext';
 
 const Booking = () => {
@@ -129,12 +127,18 @@ const Booking = () => {
                     </p>
 
                     <div className="space-y-4">
-                        <Button to="/my-bookings" variant="primary" className="w-full bg-white text-black hover:bg-[#00E599] font-black uppercase tracking-widest py-4 rounded-xl flex items-center justify-center">
+                        <Link
+                            to="/my-bookings"
+                            className="w-full bg-white text-black hover:bg-[#00E599] hover:text-black font-black uppercase tracking-widest py-4 rounded-xl flex items-center justify-center transition-all duration-300"
+                        >
                             View My Tickets
-                        </Button>
-                        <Button to="/events" variant="outline" className="w-full border border-white/20 text-gray-400 hover:text-white hover:border-white font-bold uppercase tracking-widest py-4 rounded-xl flex items-center justify-center">
+                        </Link>
+                        <Link
+                            to="/events"
+                            className="w-full border-2 border-white/20 text-white hover:text-white hover:bg-white/10 hover:border-white font-bold uppercase tracking-widest py-4 rounded-xl flex items-center justify-center transition-all duration-300"
+                        >
                             Browse More Events
-                        </Button>
+                        </Link>
                     </div>
                 </motion.div>
             </div>
@@ -150,7 +154,8 @@ const Booking = () => {
                     <img
                         src={event.imageUrl}
                         alt={event.title}
-                        className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all duration-700"
+                        loading="lazy"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                         onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80'; }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent flex flex-col justify-end p-10 text-white">
@@ -213,15 +218,23 @@ const Booking = () => {
                                 <span className="text-4xl font-black text-[#00E599]">₹{totalAmount}</span>
                             </div>
 
-                            <Button
+                            <button
                                 type="submit"
-                                variant="primary"
-                                size="lg"
-                                className="w-full uppercase tracking-widest bg-white text-black font-black hover:bg-[#00E599] hover:text-black transition-colors border-0 py-4 text-lg"
-                                isLoading={isProcessing}
+                                disabled={isProcessing}
+                                className="w-full uppercase tracking-widest bg-white text-black font-black hover:bg-[#00E599] hover:text-black transition-all duration-300 py-4 text-lg rounded-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
-                                {isProcessing ? 'Processing...' : 'Confirm & Pay'}
-                            </Button>
+                                {isProcessing ? (
+                                    <>
+                                        <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                        </svg>
+                                        Processing...
+                                    </>
+                                ) : (
+                                    'Confirm & Pay'
+                                )}
+                            </button>
                         </div>
                     </form>
                 </div>

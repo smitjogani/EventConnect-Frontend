@@ -136,6 +136,7 @@ export default function Events() {
                                         <img
                                             src={event.imageUrl}
                                             alt={event.title}
+                                            loading="lazy"
                                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-90 group-hover:opacity-100"
                                             onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80'; }}
                                         />

@@ -103,7 +103,7 @@ export default function Home() {
                                         DATE: OCT 24 <br />
                                         GATE: 04 ROW: A
                                     </div>
-                                    <div className="text-5xl font-black tracking-tighter">₹24,000</div>
+                                    <div className="text-5xl font-black tracking-tighter">₹2XXX</div>
                                 </div>
                             </TicketUI>
                         </motion.div>
@@ -177,8 +177,9 @@ export default function Home() {
                                     <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors z-10"></div>
                                     <img
                                         src={event.imageUrl}
-                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 grayscale group-hover:grayscale-0"
                                         alt={event.title}
+                                        loading="lazy"
+                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 grayscale group-hover:grayscale-0"
                                         onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80'; }}
                                     />
 

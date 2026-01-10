@@ -45,13 +45,24 @@ export default function AdminDashboard() {
         setDeleteModal({ isOpen: true, eventId: id, eventTitle: title });
     };
 
-    const handleDelete = async () => {
+    const confirmDelete = async () => {
+        setDeleteModal({ ...deleteModal, isOpen: false });
         try {
             await api.delete(`/events/${deleteModal.eventId}`);
             setEvents(events.filter(e => e.id !== deleteModal.eventId));
+            alert('Event deleted successfully!');
         } catch (err) {
             console.error("Delete failed", err);
-            alert("Failed to delete event. You might not have permission.");
+            const errorMessage = err.response?.data?.message || err.message;
+
+            // Check if it's a constraint violation (bookings exist)
+            if (errorMessage.includes('constraint') || errorMessage.includes('Duplicate') || err.response?.status === 400) {
+                alert('Cannot delete this event because it has existing bookings. Please cancel all bookings first or contact support.');
+            } else if (err.response?.status === 403) {
+                alert('You do not have permission to delete this event.');
+            } else {
+                alert(`Failed to delete event: ${errorMessage}`);
+            }
         }
     };
 
@@ -112,7 +123,7 @@ export default function AdminDashboard() {
                             <div className="col-span-2 text-right">Actions</div>
                         </div>
 
-                        {events.map((event) => (
+                        {events.map((event, index) => (
                             <motion.div
                                 key={event.id}
                                 initial={{ opacity: 0, y: 10 }}
@@ -123,14 +134,17 @@ export default function AdminDashboard() {
                                 <div className="lg:hidden space-y-4">
                                     <div className="flex items-start gap-4">
                                         <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-800 rounded-lg overflow-hidden flex-shrink-0">
-                                            <img src={event.imageUrl} alt={event.title} className="w-full h-full object-cover"
+                                            <img src={event.imageUrl} alt={event.title} loading="lazy" className="w-full h-full object-cover"
                                                 onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80'; }}
                                             />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <h3 className="font-bold text-base sm:text-lg leading-tight mb-1 group-hover:text-[#00E599] transition-colors truncate">
-                                                {event.title}
-                                            </h3>
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="text-xs font-mono text-gray-500">#{index + 1}</span>
+                                                <h3 className="font-bold text-base sm:text-lg leading-tight group-hover:text-[#00E599] transition-colors truncate">
+                                                    {event.title}
+                                                </h3>
+                                            </div>
                                             <p className="text-xs text-gray-500 mb-2 truncate">{event.location}</p>
                                             <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-400">
                                                 <Calendar size={12} className="text-[#00E599]" />
@@ -161,7 +175,7 @@ export default function AdminDashboard() {
 
                                 {/* Desktop Layout */}
                                 <div className="hidden lg:contents">
-                                    <div className="col-span-1 text-gray-500 font-mono text-xs">#{event.id}</div>
+                                    <div className="col-span-1 text-gray-500 font-mono text-xs">#{index + 1}</div>
                                     <div className="col-span-5 flex items-center gap-4">
                                         <div className="w-16 h-16 bg-gray-800 rounded-lg overflow-hidden flex-shrink-0">
                                             <img src={event.imageUrl} alt={event.title} className="w-full h-full object-cover"
@@ -211,7 +225,7 @@ export default function AdminDashboard() {
             <ConfirmModal
                 isOpen={deleteModal.isOpen}
                 onClose={() => setDeleteModal({ isOpen: false, eventId: null, eventTitle: '' })}
-                onConfirm={handleDelete}
+                onConfirm={confirmDelete}
                 title="Delete Event?"
                 message={`Are you sure you want to delete "${deleteModal.eventTitle}"? This action cannot be undone and all associated bookings will be affected.`}
                 confirmText="Delete Event"
