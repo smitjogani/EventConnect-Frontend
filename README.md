@@ -53,6 +53,106 @@ npm run preview
 
 ---
 
+## 🌐 Deployment
+
+### Live Production URL
+🔗 **Frontend**: [https://eventconnectbook.netlify.app](https://eventconnectbook.netlify.app)
+
+### Deployment Platform: Netlify
+
+The frontend is deployed on **Netlify** with automatic deployments from GitHub.
+
+#### Environment Configuration
+
+The production API URL is configured in `.env.production`:
+
+```env
+VITE_API_URL=https://eventconnect-backend-production.up.railway.app/api/v1
+```
+
+This file is committed to the repository and automatically used during Netlify builds.
+
+#### Deployment Steps
+
+1. **Connect GitHub Repository**
+   - Go to [Netlify Dashboard](https://app.netlify.com)
+   - Click "Add new site" → "Import an existing project"
+   - Choose GitHub and authorize Netlify
+   - Select `EventConnect-Frontend` repository
+
+2. **Configure Build Settings**
+   ```
+   Base directory: (leave empty)
+   Build command: npm run build
+   Publish directory: dist
+   ```
+
+3. **Deploy**
+   - Click "Deploy site"
+   - Netlify automatically builds and deploys
+   - Every push to `main` branch triggers a new deployment
+
+4. **Custom Domain (Optional)**
+   - Go to Site settings → Domain management
+   - Click "Add custom domain"
+   - Follow DNS configuration instructions
+
+#### Build Configuration
+
+Netlify uses the following configuration (auto-detected from `package.json`):
+
+```json
+{
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  }
+}
+```
+
+#### Environment Variables (Not Required)
+
+Since `.env.production` is committed, **no environment variables need to be set in Netlify**. The API URL is baked into the build.
+
+If you need to override the API URL:
+1. Go to Site settings → Environment variables
+2. Add:
+   ```
+   VITE_API_URL=https://your-backend-url.com/api/v1
+   ```
+
+#### CORS Configuration
+
+Ensure the backend allows requests from the Netlify domain. In the backend's `application-prod.properties`:
+
+```properties
+cors.allowed-origins=http://localhost:5173,https://eventconnectbook.netlify.app
+```
+
+#### Deployment Status
+
+- ✅ **Auto-deploy**: Enabled on `main` branch
+- ✅ **Build time**: ~1-2 minutes
+- ✅ **CDN**: Global edge network
+- ✅ **HTTPS**: Automatic SSL certificate
+
+#### Testing the Deployment
+
+1. **Visit the live URL**: https://eventconnectbook.netlify.app
+2. **Test API connection**: Open browser console and check for successful API calls
+3. **Test authentication**: Try logging in with admin credentials
+4. **Test booking flow**: Browse events and create a booking
+
+#### Rollback
+
+If a deployment fails:
+1. Go to Netlify Dashboard → Deploys
+2. Find the last successful deployment
+3. Click "..." → "Publish deploy"
+
+---
+
 ## 📝 Assumptions
 
 ### User Behavior
