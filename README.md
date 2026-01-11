@@ -1,5 +1,344 @@
 # EventConnect - Frontend Documentation
 
+> Event Connect 
+
+---
+
+## 📋 Table of Contents
+
+- [Quick Setup](#quick-setup)
+- [Assumptions](#assumptions)
+- [Design Notes](#design-notes)
+- [JWT Token Management](#jwt-token-management)
+- [Design Philosophy](#design-philosophy)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Component Patterns](#component-patterns)
+
+---
+
+## 🚀 Quick Setup
+
+### Prerequisites
+- Node.js 16+ and npm 8+
+- Backend API running on `http://localhost:8080`
+
+### Installation
+
+```bash
+# Navigate to Client directory
+cd Client
+
+# Install dependencies
+npm install
+
+# Create .env file (optional)
+echo "VITE_API_BASE_URL=http://localhost:8080/api/v1" > .env
+
+# Run development server
+npm run dev
+```
+
+**Access**: http://localhost:5173
+
+### Build for Production
+
+```bash
+npm run build
+# Output in /dist folder
+
+# Preview production build
+npm run preview
+```
+
+---
+
+## 📝 Assumptions
+
+### User Behavior
+- Users have modern browsers (Chrome 90+, Firefox 88+, Safari 14+)
+- JavaScript is enabled
+- Cookies and localStorage are available
+- Users have stable internet connection for API calls
+
+### Data Assumptions
+- All events have valid image URLs
+- Event dates are in ISO 8601 format
+- Prices are in INR (₹)
+- QR codes are sufficient for ticket verification
+- Users provide valid email addresses
+
+### Technical Assumptions
+- Backend API is RESTful and returns JSON
+- JWT tokens are used for authentication
+- CORS is properly configured on backend
+- Backend handles all business logic and validation
+- Images are hosted externally (Unsplash, etc.)
+
+### Security Assumptions
+- HTTPS is used in production
+- Tokens are stored in localStorage (acceptable for this use case)
+- Backend validates all requests
+- XSS protection via React's built-in escaping
+- CSRF protection not needed (JWT in headers, not cookies)
+
+---
+
+## 🎯 Design Notes
+
+### Architecture Decisions
+
+#### **1. React Context over Redux**
+**Why**: Simpler state management for small-to-medium apps
+- Less boilerplate code
+- Easier to understand and maintain
+- Sufficient for authentication state
+- No need for complex middleware
+
+**Trade-off**: Less powerful for complex state management
+
+#### **2. Vite over Create React App**
+**Why**: Faster development experience
+- Instant HMR (Hot Module Replacement)
+- Faster builds
+- Better tree-shaking
+- Modern tooling
+
+**Trade-off**: Newer ecosystem, fewer examples
+
+#### **3. Tailwind CSS over Component Libraries**
+**Why**: Full design control and customization
+- No design constraints
+- Smaller bundle size
+- Consistent design system
+- Easy to customize
+
+**Trade-off**: More manual styling work
+
+#### **4. Axios over Fetch**
+**Why**: Better developer experience
+- Request/response interceptors
+- Automatic JSON transformation
+- Better error handling
+- Request cancellation
+
+**Trade-off**: Additional dependency
+
+#### **5. React Hook Form over Formik**
+**Why**: Better performance
+- Less re-renders
+- Smaller bundle size
+- Better TypeScript support
+- Simpler API
+
+**Trade-off**: Less community resources
+
+### UI/UX Decisions
+
+- **Dark Theme First**: Reduces eye strain, modern aesthetic
+- **Mobile-First**: Ensures responsive design from the start
+- **Lazy Loading**: Improves initial load time
+- **Optimistic UI**: Better perceived performance
+- **Micro-animations**: Enhances user engagement
+
+---
+
+## 🔐 JWT Token Management
+
+### Token Storage Strategy
+
+EventConnect uses **localStorage** for token storage with automatic refresh mechanism.
+
+#### **Why localStorage?**
+- ✅ Persists across browser sessions
+- ✅ Accessible from JavaScript
+- ✅ Simple implementation
+- ✅ Works with SPA architecture
+
+#### **Security Considerations**
+- ✅ Not vulnerable to CSRF (tokens in headers, not cookies)
+- ✅ Tokens have expiration
+- ✅ Refresh token rotation
+
+### Token Flow
+
+```
+User Login
+    ↓
+Backend returns:
+  - accessToken (15 min expiry)
+  - refreshToken (7 days expiry)
+  - user info (name, email, role)
+    ↓
+Store in localStorage:
+  - 'accessToken'
+  - 'refreshToken'
+  - 'user' (JSON)
+    ↓
+All API requests include:
+  Authorization: Bearer {accessToken}
+    ↓
+Token expires (401/403)
+    ↓
+Axios interceptor catches error
+    ↓
+Call /auth/refresh-token
+    ↓
+Update accessToken
+    ↓
+Retry original request
+    ↓
+If refresh fails → Logout
+```
+
+### Implementation Details
+
+#### **1. Storing Tokens (AuthContext.jsx)**
+
+```javascript
+const login = async (email, password) => {
+  const response = await api.post('/auth/authenticate', { email, password });
+  const { accessToken, refreshToken, name, email, role } = response.data;
+  
+  // Store tokens
+  localStorage.setItem('accessToken', accessToken);
+  localStorage.setItem('refreshToken', refreshToken);
+  localStorage.setItem('user', JSON.stringify({ name, email, role }));
+  
+  // Update context state
+  setUser({ name, email, role });
+};
+```
+
+#### **2. Attaching Tokens to Requests (api.js)**
+
+```javascript
+// Axios request interceptor
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+```
+
+#### **3. Automatic Token Refresh (api.js)**
+
+```javascript
+// Axios response interceptor
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    
+    // If 401/403 and not already retried
+    if ((error.response?.status === 401 || error.response?.status === 403) 
+        && !originalRequest._retry) {
+      originalRequest._retry = true;
+      
+      try {
+        const refreshToken = localStorage.getItem('refreshToken');
+        const response = await axios.post(
+          'http://localhost:8080/api/v1/auth/refresh-token',
+          { refreshToken }
+        );
+        
+        const { accessToken } = response.data;
+        
+        // Update stored token
+        localStorage.setItem('accessToken', accessToken);
+        
+        // Update request header
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        
+        // Retry original request
+        return api(originalRequest);
+      } catch (refreshError) {
+        // Refresh failed - logout user
+        localStorage.clear();
+        window.location.href = '/login';
+        return Promise.reject(refreshError);
+      }
+    }
+    
+    return Promise.reject(error);
+  }
+);
+```
+
+#### **4. Logout (AuthContext.jsx)**
+
+```javascript
+const logout = () => {
+  // Clear all stored data
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+  localStorage.removeItem('user');
+  
+  // Clear context state
+  setUser(null);
+  
+  // Redirect to login
+  navigate('/login');
+};
+```
+
+#### **5. Protected Routes (App.jsx)**
+
+```javascript
+const ProtectedRoute = ({ children, requireAdmin = false }) => {
+  const { user } = useAuth();
+  
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (requireAdmin && user.role !== 'ADMIN') {
+    return <Navigate to="/" replace />;
+  }
+  
+  return children;
+};
+```
+
+### Token Lifecycle
+
+| Event | Action | Result |
+|-------|--------|--------|
+| **Login** | Store tokens in localStorage | User authenticated |
+| **API Call** | Attach accessToken to header | Request authorized |
+| **Token Expires** | Interceptor catches 401 | Auto-refresh triggered |
+| **Refresh Success** | Update accessToken | Request retried |
+| **Refresh Fails** | Clear storage | User logged out |
+| **Logout** | Clear localStorage | User unauthenticated |
+
+### Security Best Practices
+
+✅ **Implemented**:
+- Short-lived access tokens (15 min)
+- Long-lived refresh tokens (7 days)
+- Automatic token refresh
+- Secure token transmission (HTTPS in production)
+- Token validation on backend
+
+⚠️ **Considerations**:
+- XSS vulnerability (mitigated by React)
+- No token encryption in localStorage
+- Single device logout only
+
+🔮 **Future Enhancements**:
+- HttpOnly cookies for refresh tokens
+- Token encryption
+- Multi-device logout
+- Token revocation list
+- Fingerprinting
+
+---
+
 ## 🎨 Design Philosophy & Branding
 
 ### Brand Identity
