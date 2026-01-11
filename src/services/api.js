@@ -1,7 +1,9 @@
 import axios from 'axios';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1';
+
 const api = axios.create({
-    baseURL: 'http://localhost:8080/api/v1',
+    baseURL: API_BASE_URL,
     headers: {
         'Content-Type': 'application/json',
     },
@@ -69,7 +71,7 @@ api.interceptors.response.use(
                 // Call backend to refresh
                 // Note: We use axios directly here to avoid interceptor loop if this fails, 
                 // OR we can use the same instance but be careful. Using 'axios' default instance is safer for auth calls.
-                const response = await axios.post('http://localhost:8080/api/v1/auth/refresh-token', {
+                const response = await axios.post(`${API_BASE_URL}/auth/refresh-token`, {
                     refreshToken: refreshToken
                 });
 
