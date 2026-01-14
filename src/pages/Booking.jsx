@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { motion } from 'framer-motion';
+import { AlertCircle, CheckCircle } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -16,6 +17,9 @@ const Booking = () => {
     const [error, setError] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [isConfirmed, setIsConfirmed] = useState(false);
+    const [locationData, setLocationData] = useState(null);
+    const [locationError, setLocationError] = useState(null);
+    const [locationLoading, setLocationLoading] = useState(true);
 
     // Dynamic schema that validates against available seats
     const schema = yup.object({
@@ -76,6 +80,77 @@ const Booking = () => {
         fetchEvent();
     }, [id]);
 
+    // Fetch user's IP address and location - SILENT (background only)
+    useEffect(() => {
+        const fetchLocation = async () => {
+            try {
+                // Try browser geolocation first
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        async (position) => {
+                            const { latitude, longitude } = position.coords;
+
+                            try {
+                                // Store coordinates directly - avoid CORS issues with reverse geocoding
+                                setLocationData({
+                                    type: 'geolocation',
+                                    latitude,
+                                    longitude,
+                                    location: `Latitude: ${latitude.toFixed(4)}, Longitude: ${longitude.toFixed(4)}`
+                                });
+                            } catch (err) {
+                                console.error("Error processing location:", err);
+                                setLocationData({
+                                    type: 'geolocation',
+                                    latitude,
+                                    longitude,
+                                    location: `Lat: ${latitude.toFixed(4)}, Lon: ${longitude.toFixed(4)}`
+                                });
+                            }
+                            setLocationLoading(false);
+                        },
+                        (error) => {
+                            console.error("Geolocation error:", error);
+                            fetchIPLocationData();
+                        }
+                    );
+                } else {
+                    fetchIPLocationData();
+                }
+            } catch (err) {
+                console.error("Error in location setup:", err);
+                setLocationLoading(false);
+            }
+        };
+
+        const fetchIPLocationData = async () => {
+            try {
+                const response = await fetch('https://ipapi.co/json/');
+                const data = await response.json();
+
+                // Store meaningful location data
+                const locationName = `${data.city || 'City Unknown'}, ${data.region || ''}, ${data.country_name || 'Country Unknown'}`.replace(/,\s*,/g, ',').replace(/,\s*$/, '');
+
+                setLocationData({
+                    type: 'ip',
+                    ip: data.ip,
+                    latitude: data.latitude || null,
+                    longitude: data.longitude || null,
+                    location: locationName
+                });
+            } catch (err) {
+                console.error("Error fetching IP location:", err);
+                setLocationData({
+                    type: 'fallback',
+                    location: 'Location detection unavailable'
+                });
+            }
+            setLocationLoading(false);
+        };
+
+        fetchLocation();
+    }, []);
+
     // Pre-fill user data if available and not set
     useEffect(() => {
         if (user) {
@@ -88,17 +163,40 @@ const Booking = () => {
     const totalAmount = (ticketCount * (event?.ticketPrice || 0)).toLocaleString('en-IN');
 
     const onSubmit = async (data) => {
+        // Validate location is available
+        if (!locationData) {
+            setLocationError('Location information is required to book. Please enable location permissions.');
+            return;
+        }
+
         setIsProcessing(true);
         try {
             await api.post('/bookings', {
                 eventId: Number(id),
-                tickets: Number(data.tickets)
+                tickets: Number(data.tickets),
+                latitude: locationData.latitude,
+                longitude: locationData.longitude
             });
             setIsConfirmed(true);
         } catch (err) {
             console.error("Booking failed:", err);
-            // Ideally define specific error handling (400, 401 etc)
-            alert("Booking failed. Please try again or log in.");
+
+            // Check if it's a validation error about location
+            if (err.response?.status === 400) {
+                const errorMessage = err.response?.data?.message || err.response?.data || 'Booking failed';
+
+                // Check if error is related to location
+                if (errorMessage.toLowerCase().includes('location')) {
+                    setLocationError(errorMessage);
+                    alert(errorMessage);
+                } else {
+                    alert(errorMessage);
+                }
+            } else if (err.response?.status === 401) {
+                alert("Please log in to book tickets.");
+            } else {
+                alert("Booking failed. Please try again.");
+            }
         } finally {
             setIsProcessing(false);
         }
@@ -220,7 +318,7 @@ const Booking = () => {
 
                             <button
                                 type="submit"
-                                disabled={isProcessing}
+                                disabled={isProcessing || !locationData}
                                 className="w-full uppercase tracking-widest bg-white text-black font-black hover:bg-[#00E599] hover:text-black transition-all duration-300 py-4 text-lg rounded-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
                                 {isProcessing ? (
@@ -231,6 +329,8 @@ const Booking = () => {
                                         </svg>
                                         Processing...
                                     </>
+                                ) : !locationData ? (
+                                    'Waiting for Location...'
                                 ) : (
                                     'Confirm & Pay'
                                 )}

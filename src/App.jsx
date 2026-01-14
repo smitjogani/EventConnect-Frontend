@@ -11,6 +11,7 @@ const Events = lazy(() => import('./pages/Events'));
 const EventDetail = lazy(() => import('./pages/EventDetail'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
+const Profile = lazy(() => import('./pages/Profile'));
 const MyBookings = lazy(() => import('./pages/MyBookings'));
 const Booking = lazy(() => import('./pages/Booking'));
 const TicketReceipt = lazy(() => import('./pages/TicketReceipt'));
@@ -91,6 +92,13 @@ function App() {
                         <Route path="/register" element={<Layout><Register /></Layout>} />
 
                         {/* Protected User Routes - Block Admins */}
+                        <Route path="/profile" element={
+                            <Layout>
+                                <ProtectedRoute blockAdmin={true}>
+                                    <Profile />
+                                </ProtectedRoute>
+                            </Layout>
+                        } />
                         <Route path="/my-bookings" element={
                             <Layout>
                                 <ProtectedRoute blockAdmin={true}>

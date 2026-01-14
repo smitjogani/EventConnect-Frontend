@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Menu, X, LogOut } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Menu, X, LogOut, User, BookOpen, ChevronDown } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Navbar() {
@@ -9,6 +9,8 @@ export default function Navbar() {
     const navigate = useNavigate();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
+    const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const profileRef = useRef(null);
 
     // Handle scroll for transparency effect
     useEffect(() => {
@@ -38,8 +40,20 @@ export default function Navbar() {
     const handleLogout = () => {
         logout();
         setIsMenuOpen(false);
+        setIsProfileOpen(false);
         navigate('/');
     };
+
+    // Close profile dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (profileRef.current && !profileRef.current.contains(event.target)) {
+                setIsProfileOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const toggleMenu = () => {
         setIsMenuOpen(!isMenuOpen);
@@ -77,20 +91,78 @@ export default function Navbar() {
                             {user ? (
                                 <div className="flex items-center gap-6">
                                     {/* Show My Bookings only for non-admin users */}
-                                    {user.role !== 'ADMIN' && (
+                                    {/* {user.role !== 'ADMIN' && (
                                         <Link to="/my-bookings" className={`text-sm font-bold uppercase tracking-widest hover:text-[#00E599] transition-colors ${scrolled ? 'text-gray-300' : 'text-white'}`}>My Bookings</Link>
-                                    )}
+                                    )} */}
                                     {/* Show Admin link only for admin users */}
                                     {user.role === 'ADMIN' && (
                                         <Link to="/admin" className={`text-sm font-bold uppercase tracking-widest hover:text-[#00E599] transition-colors ${scrolled ? 'text-gray-300' : 'text-white'}`}>Admin Dashboard</Link>
                                     )}
                                     <div className="h-4 w-px bg-white/20"></div>
-                                    <button
-                                        onClick={handleLogout}
-                                        className="flex items-center gap-2 text-sm font-bold text-red-500 hover:text-red-400 transition-colors"
-                                    >
-                                        <LogOut size={16} /> <span className="uppercase tracking-widest">Logout</span>
-                                    </button>
+
+                                    {/* Profile Dropdown */}
+                                    <div className="relative" ref={profileRef}>
+                                        <button
+                                            onClick={() => setIsProfileOpen(!isProfileOpen)}
+                                            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${isProfileOpen ? 'bg-[#00E599]/20 text-[#00E599]' : scrolled ? 'text-gray-300 hover:text-[#00E599]' : 'text-white hover:text-[#00E599]'}`}
+                                        >
+                                            <User size={16} />
+                                            <span className="text-sm font-bold uppercase tracking-widest">{user.name}</span>
+                                            <ChevronDown size={14} className={`transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} />
+                                        </button>
+
+                                        {/* Dropdown Menu */}
+                                        <AnimatePresence>
+                                            {isProfileOpen && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, y: -10 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    exit={{ opacity: 0, y: -10 }}
+                                                    transition={{ duration: 0.15 }}
+                                                    className="absolute right-0 mt-2 w-56 bg-black/95 border border-white/10 rounded-xl shadow-xl backdrop-blur-sm overflow-hidden"
+                                                >
+                                                    {/* Profile Info */}
+                                                    <div className="px-4 py-3 border-b border-white/10">
+                                                        <p className="text-xs text-gray-400 uppercase tracking-widest mb-1">Logged in as</p>
+                                                        <p className="text-white font-semibold text-sm">{user.email}</p>
+                                                    </div>
+
+                                                    {/* Menu Items */}
+                                                    <div className="py-2">
+                                                        <Link
+                                                            to="/profile"
+                                                            onClick={() => setIsProfileOpen(false)}
+                                                            className="flex items-center gap-3 px-4 py-3 text-white hover:bg-white/10 transition-colors text-sm"
+                                                        >
+                                                            <User size={16} className="text-[#00E599]" />
+                                                            <span className="font-medium">Edit Profile</span>
+                                                        </Link>
+
+                                                        {user.role !== 'ADMIN' && (
+                                                            <Link
+                                                                to="/my-bookings"
+                                                                onClick={() => setIsProfileOpen(false)}
+                                                                className="flex items-center gap-3 px-4 py-3 text-white hover:bg-white/10 transition-colors text-sm"
+                                                            >
+                                                                <BookOpen size={16} className="text-[#00E599]" />
+                                                                <span className="font-medium">My Bookings</span>
+                                                            </Link>
+                                                        )}
+
+                                                        <div className="border-t border-white/10 my-2"></div>
+
+                                                        <button
+                                                            onClick={handleLogout}
+                                                            className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 transition-colors text-sm"
+                                                        >
+                                                            <LogOut size={16} />
+                                                            <span className="font-medium">Logout</span>
+                                                        </button>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="flex items-center gap-4">

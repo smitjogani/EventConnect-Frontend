@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, Ticket, Clock, ArrowRight } from 'lucide-react';
+import { Calendar, MapPin, Ticket, Clock, ArrowRight, Globe } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
 import TicketUI from '../components/ui/TicketUI';
@@ -93,6 +93,16 @@ export default function MyBookings() {
                                                         <MapPin size={16} className="text-[#00E599]" />
                                                         {booking.eventLocation}
                                                     </div>
+                                                    
+                                                    {/* Location & IP Info */}
+                                                    {booking.userLocation && (
+                                                        <div className="flex items-center gap-2 text-gray-400 text-sm font-medium">
+                                                            <Globe size={16} className="text-[#00E599]" />
+                                                            <span title={booking.ipAddress ? `IP: ${booking.ipAddress}` : ''}>
+                                                                Booked from: {booking.userLocation}
+                                                            </span>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
 
