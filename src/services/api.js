@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://eventconnect-api-production.up.railway.app/api/v1';
+const API_BASE_URL = 'https://ec-live-app-99-production.up.railway.app/api/v1';
 
 const api = axios.create({
     baseURL: API_BASE_URL,
